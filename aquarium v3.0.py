@@ -24,19 +24,13 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 # Parameters
 GAME_TITLE = 'The Aquarium'
 SPEED_FISH = 5             # speed of fish
-SPEED_PREDATOR = 5         # speed of predators
 N_FISH_START = 10        # starting number of fish
-N_PREDATOR_START = 0      # starting number of predators
 MAX_FISH = 100            # max number of fishs
-MAX_PREDATOR = 100
 TPS = 10
 MAX_DURATION = 1*60*TPS    # number of seconds
 
-PREDATOR_LIFE_TIME = 100
-FISH_PROCREATION_AGE = 5
+FISH_PROCREATION_AGE = 50
 FISH_PROB_PROCREATION = 1./FISH_PROCREATION_AGE
-PREDATOR_PROCREATION_MEALS = 30
-PREDATOR_VISION = 100  # in pixels per direction
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
@@ -88,7 +82,7 @@ class Animal(Block):
 
 class Fish(Animal):
 
-    def __init__(self, lifetime=10, colour=BLACK, width=6, height=6):
+    def __init__(self, lifetime=5000, colour=BLACK, width=6, height=6):
         Animal.__init__(self, width, height)
         self.image.fill(colour)
         self.speed = SPEED_FISH
@@ -112,112 +106,6 @@ class Fish(Animal):
         if self.age >= self.lifetime:
             self.kill()
 
-
-class Predator(Animal):
-
-    def __init__(self, width=20, height=15):
-        Animal.__init__(self, width, height)
-        self.speed = SPEED_PREDATOR
-        self.meals = 0
-
-    def update(self):
-        self.move()
-        Animal.update(self)
-        if self.age >= PREDATOR_LIFE_TIME:
-            self.kill()
-
-    def eat(self, n):
-        self.meals += n
-
-
-class Dolphin(Predator):
-
-    def __init__(self, colour=BLUE, width=20, height=15):
-        Predator.__init__(self, width, height)
-        self.image.fill(colour)
-
-    def decide(self, target_list=[]):
-        vision = Block(PREDATOR_VISION, PREDATOR_VISION)
-        vision.rect.center = self.rect.center
-        vision_list = pygame.sprite.spritecollide(vision, target_list, False)
-
-        if vision_list:
-            targ_x = targ_y = 0
-            for elem in vision_list:   # Dolphin goes towards most of the fish
-                dist = max(((self.rect.x - elem.rect.x)**2 +
-                            (self.rect.y - elem.rect.y)**2), 1)
-                targ_x += np.cos(np.arctan2((elem.rect.y - self.rect.y),
-                                            (elem.rect.x - self.rect.x)))/dist
-                targ_y += np.sin(np.arctan2((elem.rect.y - self.rect.y),
-                                            (elem.rect.x - self.rect.x)))/dist
-                self.angle = np.arctan2(targ_y, targ_x)
-        else:
-            self.angle = np.arctan2(np.random.randint(-10, 11), 
-                                    np.random.randint(-10, 11))
-
-    def procreate(self, same_species_list):
-        if (self.meals > PREDATOR_PROCREATION_MEALS and 
-            len(same_species_list) < MAX_PREDATOR):
-            elem = Dolphin()
-            elem.rect.x = self.rect.x
-            elem.rect.y = self.rect.y
-            same_species_list.add(elem)
-            elem.move()
-            self.meals = 0
-            self.age = 0
-
-    def update(self, target_list, same_species_list):
-        self.procreate(same_species_list)
-        self.decide(target_list)
-        Predator.update(self)
-        self.image.fill((0, 0, 
-                         int(50 + 205*(1 - self.age / PREDATOR_LIFE_TIME))))
-
-
-class Shark(Predator):
-
-    def __init__(self, colour=BLACK, width=20, height=15):
-        Predator.__init__(self, width, height)
-        self.image.fill(colour)
-
-    def decide(self, target_list=[]):
-        vision = Block(PREDATOR_VISION, PREDATOR_VISION)
-        vision.rect.center = self.rect.center
-        vision_list = pygame.sprite.spritecollide(vision, target_list, False)
-
-        if vision_list:
-            targ_x = targ_y = 0
-            dist_min = SCREEN_HEIGHT**2 + SCREEN_WIDTH**2
-            for elem in vision_list:     # shark goes towards the closest fish
-                dist = max(((self.rect.x - elem.rect.x)**2 +
-                            (self.rect.y - elem.rect.y)**2), 1)
-                if dist < dist_min:
-                    dist_min = dist
-                    targ_x += (elem.rect.x - self.rect.x)
-                    targ_y += (elem.rect.y - self.rect.y)
-            self.angle = np.arctan2(targ_y, targ_x)
-        else:
-            self.angle = np.arctan2(np.random.randint(-10, 11), 
-                                    np.random.randint(-10, 11))
-
-    def procreate(self, same_species_list):
-        if (self.meals > PREDATOR_PROCREATION_MEALS and 
-            len(same_species_list) < MAX_PREDATOR):
-            elem = Shark()
-            elem.rect.x = self.rect.x
-            elem.rect.y = self.rect.y
-            same_species_list.add(elem)
-            elem.move()
-            self.meals = 0
-            self.age = 0
-
-    def update(self, target_list, same_species_list):
-        self.procreate(same_species_list)
-        self.decide(target_list)
-        Predator.update(self)
-        self.image.fill((int(50 + 205*(1 - self.age / PREDATOR_LIFE_TIME)), 
-                         0, 0))
-
 # Initialize PyGame
 pygame.init()
 pygame.display.set_caption(GAME_TITLE)
@@ -230,20 +118,12 @@ fish_list = pygame.sprite.Group()
 predator_list = pygame.sprite.Group()
 
 for i in range(N_FISH_START):
-    fish = Fish(10)
+    fish = Fish()
     fish_list.add(fish)
-
-for i in range(N_PREDATOR_START):
-    if np.random.uniform() > 0.5:
-        predator = Dolphin()
-    else:
-        predator = Shark()
-    predator_list.add(predator)
 
 stage = 1
 dt = []
 n_fish = []
-n_predator = []
 
 running = True
 clock = pygame.time.Clock()
@@ -257,20 +137,13 @@ while running:
     stage += 1
     dt.append(stage)
     n_fish.append(len(fish_list))
-    n_predator.append(len(predator_list))
 
     screen.fill(WHITE)
-    for predator in predator_list:
-        predator.update(fish_list, predator_list)
-        fish_hit_list = pygame.sprite.spritecollide(
-                        predator, fish_list, True)
-        predator.eat(len(fish_hit_list))
     for fish in fish_list:
         fish.update(fish_list)
 
     font = pygame.font.Font(None, 24)
-    text = ('Fish : ' + str(len(fish_list)) + 
-            ';  predators : ' + str(len(predator_list)) + '  ')
+    text = ('Fish : ' + str(len(fish_list)) + '  ')
     text_render = font.render(text, 1, GREEN)
     textpos = text_render.get_rect()
     textpos.right = SCREEN_WIDTH
@@ -278,7 +151,6 @@ while running:
     screen.blit(text_render, textpos)
 
     fish_list.draw(screen)
-    predator_list.draw(screen)
     pygame.display.flip()
     clock.tick(TPS)
 
