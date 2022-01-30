@@ -25,9 +25,9 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 GAME_TITLE = 'The Aquarium'
 SPEED_FISH = 5             # speed of fish
 SPEED_PREDATOR = 5         # speed of predators
-N_FISH_START = 10         # starting number of fish
-N_PREDATOR_START = 1      # starting number of predators
-MAX_FISH = 1000            # max number of fishs
+N_FISH_START = 10        # starting number of fish
+N_PREDATOR_START = 0      # starting number of predators
+MAX_FISH = 100            # max number of fishs
 MAX_PREDATOR = 100
 TPS = 10
 MAX_DURATION = 1*60*TPS    # number of seconds
@@ -88,10 +88,11 @@ class Animal(Block):
 
 class Fish(Animal):
 
-    def __init__(self, colour=BLACK, width=6, height=6):
+    def __init__(self, lifetime=10, colour=BLACK, width=6, height=6):
         Animal.__init__(self, width, height)
         self.image.fill(colour)
         self.speed = SPEED_FISH
+        self.lifetime = lifetime
 
     def procreate(self, same_species_list):
         if (self.age > FISH_PROCREATION_AGE and 
@@ -108,6 +109,8 @@ class Fish(Animal):
         self.stay_on_screen()
         Animal.update(self)
         self.procreate(same_species_list)
+        if self.age >= self.lifetime:
+            self.kill()
 
 
 class Predator(Animal):
@@ -227,7 +230,7 @@ fish_list = pygame.sprite.Group()
 predator_list = pygame.sprite.Group()
 
 for i in range(N_FISH_START):
-    fish = Fish()
+    fish = Fish(10)
     fish_list.add(fish)
 
 for i in range(N_PREDATOR_START):
@@ -251,53 +254,35 @@ while running:
             event.type == pygame.KEYDOWN and event.key == pygame.K_q):
             running = False
             
-    if stage > MAX_DURATION or not fish_list or not predator_list:
-        running = False
-        continue
-    else:
-        stage += 1
-        dt.append(stage)
-        n_fish.append(len(fish_list))
-        n_predator.append(len(predator_list))
+    stage += 1
+    dt.append(stage)
+    n_fish.append(len(fish_list))
+    n_predator.append(len(predator_list))
 
-        screen.fill(WHITE)
-        for predator in predator_list:
-            predator.update(fish_list, predator_list)
-            fish_hit_list = pygame.sprite.spritecollide(
-                            predator, fish_list, True)
-            predator.eat(len(fish_hit_list))
-        for fish in fish_list:
-            fish.update(fish_list)
+    screen.fill(WHITE)
+    for predator in predator_list:
+        predator.update(fish_list, predator_list)
+        fish_hit_list = pygame.sprite.spritecollide(
+                        predator, fish_list, True)
+        predator.eat(len(fish_hit_list))
+    for fish in fish_list:
+        fish.update(fish_list)
 
-        font = pygame.font.Font(None, 24)
-        text = ('Fish : ' + str(len(fish_list)) + 
-                ';  predators : ' + str(len(predator_list)) + '  ')
-        text_render = font.render(text, 1, GREEN)
-        textpos = text_render.get_rect()
-        textpos.right = SCREEN_WIDTH
-        textpos.top = 0
-        screen.blit(text_render, textpos)
+    font = pygame.font.Font(None, 24)
+    text = ('Fish : ' + str(len(fish_list)) + 
+            ';  predators : ' + str(len(predator_list)) + '  ')
+    text_render = font.render(text, 1, GREEN)
+    textpos = text_render.get_rect()
+    textpos.right = SCREEN_WIDTH
+    textpos.top = 0
+    screen.blit(text_render, textpos)
 
-        fish_list.draw(screen)
-        predator_list.draw(screen)
-        pygame.display.flip()
-        clock.tick(TPS)
+    fish_list.draw(screen)
+    predator_list.draw(screen)
+    pygame.display.flip()
+    clock.tick(TPS)
 
 del font, text_render
 pygame.display.quit()
 pygame.quit()
 
-# Plot a few graphs of the history of the population
-plt.figure(figsize=(9, 6))
-title = plt.suptitle('History of population', fontsize="x-large")
-plt.subplot(211)
-plt.plot(dt, n_fish, 'k', label='fish')
-plt.axis([0, stage, 0, int(max(n_fish)*1.05)])
-plt.legend()
-plt.subplot(212)
-plt.plot(dt, n_predator, 'r', label='predators')
-plt.axis([0, stage, 0, int(max(n_predator)*1.05)])
-plt.legend()
-title.set_y(0.95)
-plt.subplots_adjust(top=0.90)
-plt.show()
