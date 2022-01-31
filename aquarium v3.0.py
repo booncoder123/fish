@@ -29,9 +29,6 @@ MAX_FISH = 100            # max number of fishs
 TPS = 10
 MAX_DURATION = 1*60*TPS    # number of seconds
 
-FISH_PROCREATION_AGE = 50
-FISH_PROB_PROCREATION = 1./FISH_PROCREATION_AGE
-
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
 
@@ -82,17 +79,19 @@ class Animal(Block):
 
 class Fish(Animal):
 
-    def __init__(self, lifetime=5000, colour=BLACK, width=6, height=6):
+    def __init__(self, lifetime=100, colour=BLACK, width=6, height=6):
         Animal.__init__(self, width, height)
         self.image.fill(colour)
         self.speed = SPEED_FISH
         self.lifetime = lifetime
 
     def procreate(self, same_species_list):
-        if (self.age > FISH_PROCREATION_AGE and 
-            FISH_PROB_PROCREATION > np.random.uniform() and 
+        lay_age = self.lifetime / 2
+        lay_prob = 1./lay_age
+        if (self.age > lay_age and 
+           lay_prob > np.random.uniform() and 
             len(same_species_list) < MAX_FISH):
-            elem = Fish()
+            elem = Fish(np.random.randint(50,250))
             elem.rect.x = self.rect.x
             elem.rect.y = self.rect.y
             same_species_list.add(elem)
@@ -118,7 +117,7 @@ fish_list = pygame.sprite.Group()
 predator_list = pygame.sprite.Group()
 
 for i in range(N_FISH_START):
-    fish = Fish()
+    fish = Fish(np.random.randint(50,250))
     fish_list.add(fish)
 
 stage = 1
