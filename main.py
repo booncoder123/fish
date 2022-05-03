@@ -19,21 +19,25 @@ import matplotlib.pyplot as plt
 import warnings
 # import menu
 import random                       # meny.py should be in the folder
+
+from FishData import FishData
+from PondData import PondData
+
 np.random.seed(int(time.time()))
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Parameters
 number_of_colors = 8
+MY_POND = PondData("Pla")
 GAME_TITLE = 'The Aquarium'
-SPEED_FISH = 5             # speed of fish
-N_FISH_START = 10        # starting number of fish
+SPEED_FISH = 5            # speed of fish    # starting number of fish
 MAX_FISH = 100            # max number of fishs
 TPS = 10
 MAX_SIZE = 48
 MAX_DURATION = 1*60*TPS    # number of seconds
 
-SCREEN_WIDTH = 500
-SCREEN_HEIGHT = 500
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 
 # Define some colors
 BLACK = (0, 0, 0)
@@ -46,17 +50,19 @@ GREEN = (0, 100, 0)
 # Define the objects needed for the simulation
 class Block(pygame.sprite.Sprite):
 
-    def __init__(self, width, height, color=BLACK):
+    def __init__(self, width, height, fill, color=BLACK):
         pygame.sprite.Sprite.__init__(self)
         self.color = color
         self.image = pygame.Surface([width, height])
-        self.image.fill(color)
+        self.fill = fill
+        if(self.fill):
+            self.image.fill(color)
         self.rect = self.image.get_rect()
 
     def changeSize(self, width, height):
         self.image = pygame.Surface([width, height])
-        self.image.fill(self.color)
-
+        if(self.fill):
+            self.image.fill(self.color)
 
 class Bar(Block):
 
@@ -64,7 +70,7 @@ class Bar(Block):
         self.width = width
         self.height = height
         self.lifetime = lifetime
-        Block.__init__(self, self.width, self.height, RED)
+        Block.__init__(self, self.width, self.height, True, RED)
         self.rect.x = x
         self.rect.y = y
 
@@ -78,7 +84,7 @@ class MaxBar(Block):
     def __init__(self, x, y, width=6, height=6,):
         self.width = width
         self.height = height
-        Block.__init__(self, self.width, self.height, GREY)
+        Block.__init__(self, self.width, self.height, True, GREY)
         self.rect.x = x
         self.rect.y = y
 
@@ -89,11 +95,15 @@ class MaxBar(Block):
 
 class Fish(Block):
 
-    def __init__(self, lifetime=100, colour=BLACK, width=6, height=6):
-        self.width = width
-        self.height = height
-        self.lifetime = lifetime
-        Block.__init__(self, self.width, self.height)
+    def __init__(self, fishData):
+        self.fishData = fishData
+        self.width = 6
+        self.height = 6
+        self.lifetime = fishData.lifetime
+        self.face_right = True
+        Block.__init__(self, self.width, self.height, False)
+        self.image = pygame.image.load("./asset/fish.png")
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect.x = np.random.randint(0, SCREEN_WIDTH)
         self.rect.y = np.random.randint(0, SCREEN_HEIGHT)
         self.bar = Bar(self.rect.x, self.rect.y - 12, self.lifetime)
@@ -102,38 +112,53 @@ class Fish(Block):
                                 np.random.randint(-10, 11))
         self.age = 0
         self.speed = SPEED_FISH
-        self.lifetime = lifetime
         self.growth_rate = MAX_SIZE / (self.lifetime / 2)
 
-    def procreate(self, same_species_list, bar_list, maxBar_list):
-        lay_age = self.lifetime / 2
-        lay_prob = 1./lay_age
-        if (self.age > lay_age and
-           lay_prob > np.random.uniform() and
-                len(same_species_list) < MAX_FISH):
-            elem = Fish(np.random.randint(50, 250))
-            elem.rect.x = self.rect.x
-            elem.rect.y = self.rect.y
-            elem.bar.rect.x = self.rect.x
-            elem.bar.rect.y = self.rect.y - 12
-            elem.maxBar.rect.x = self.rect.x
-            elem.maxBar.rect.y = self.rect.y - 12
-            same_species_list.add(elem)
-            bar_list.add(elem.bar)
-            maxBar_list.add(elem.maxBar)
+    def changeSize(self, width, height):
+        self.image = pygame.image.load("./asset/fish.png")
+        self.image = pygame.transform.scale(self.image, (width, height))
+        if not self.face_right:
+            self.image = pygame.transform.flip(self.image, True, False)
+
+    # def procreate(self, same_species_list, bar_list, maxBar_list):
+    #     lay_age = self.lifetime / 2
+    #     lay_prob = 1./lay_age
+    #     if (self.age > lay_age and
+    #        lay_prob > np.random.uniform() and
+    #             len(same_species_list) < MAX_FISH):
+    #         elem = Fish(np.random.randint(50, 250))
+    #         elem.rect.x = self.rect.x
+    #         elem.rect.y = self.rect.y
+    #         elem.bar.rect.x = self.rect.x
+    #         elem.bar.rect.y = self.rect.y - 12
+    #         elem.maxBar.rect.x = self.rect.x
+    #         elem.maxBar.rect.y = self.rect.y - 12
+    #         same_species_list.add(elem)
+    #         bar_list.add(elem.bar)
+    #         maxBar_list.add(elem.maxBar)
 
     def stay_on_screen(self):
         if self.rect.right > SCREEN_WIDTH or self.rect.x < 0:
             self.angle = np.pi - self.angle
+            
         if self.rect.bottom > SCREEN_HEIGHT or self.rect.y < 0:
             self.angle = -self.angle
 
     def move(self):
-        self.rect.x += int(self.speed * np.cos(self.angle))
+        face = int(self.speed * np.cos(self.angle))
+        if(face < 0 and self.face_right):
+            self.image = pygame.transform.flip(self.image, True, False)
+            self.face_right = False
+        elif(face >= 0 and not self.face_right):
+            self.image = pygame.transform.flip(self.image, True, False)
+            self.face_right = True
+        # elif(face >= 0 and not self.face_right):
+        #     self.image = pygame.transform.flip(self.image, True, False)
+        self.rect.x += face
         self.rect.y += int(self.speed * np.sin(self.angle))
-        self.bar.rect.x += int(self.speed * np.cos(self.angle))
+        self.bar.rect.x += face
         self.bar.rect.y += int(self.speed * np.sin(self.angle))
-        self.maxBar.rect.x += int(self.speed * np.cos(self.angle))
+        self.maxBar.rect.x += face
         self.maxBar.rect.y += int(self.speed * np.sin(self.angle))
 
     def update(self, same_species_list, bar_list, maxBar_list):
@@ -141,16 +166,24 @@ class Fish(Block):
         self.stay_on_screen()
         self.age += 1
         self.bar.update()
-        self.procreate(same_species_list, bar_list, maxBar_list)
+        # self.procreate(same_species_list, bar_list, maxBar_list)
         if(self.age <= (self.lifetime / 2) and self.width < MAX_SIZE):
             self.width += self.growth_rate
             self.height += self.growth_rate
             self.changeSize(self.width, self.height)
         self.maxBar.update(self.width)
         if self.age >= self.lifetime:
+            self.fishData.status = 'dead'
             self.kill()
             self.bar.kill()
             self.maxBar.kill()
+
+class Background(pygame.sprite.Sprite):
+    def __init__(self, image_file):
+        pygame.sprite.Sprite.__init__(self)  #call Sprite initializer
+        self.image = pygame.image.load(image_file)
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = [0,0]
 
 
 class TextDraw:
@@ -185,8 +218,13 @@ fish_list = pygame.sprite.Group()
 bar_list = pygame.sprite.Group()
 maxBar_list = pygame.sprite.Group()
 
-for i in range(N_FISH_START):
-    fish = Fish(np.random.randint(50, 250))
+f1 = FishData("Sick Salmon","123456")
+f2 = FishData("Fish2","123456")
+MY_POND.addFish(f1)
+MY_POND.addFish(f2)
+
+for i in MY_POND.fishes:
+    fish = Fish(i)
     fish_list.add(fish)
     bar_list.add(fish.bar)
     maxBar_list.add(fish.maxBar)
@@ -199,7 +237,6 @@ number_of_colors = 100
 
 colors = ["#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
           for i in range(number_of_colors)]
-
 
 running = True
 clock = pygame.time.Clock()
@@ -214,7 +251,9 @@ while running:
     dt.append(stage)
     n_fish.append(len(fish_list))
 
+    BackGround = Background('./asset/aqua.jpg')
     screen.fill(WHITE)
+    screen.blit(BackGround.image, BackGround.rect)
 
     for fish in fish_list:
         fish.update(fish_list, bar_list, maxBar_list)
@@ -232,6 +271,6 @@ while running:
     pygame.display.flip()
     clock.tick(TPS)
 
-del font,
+# del font,
 pygame.display.quit()
 pygame.quit()

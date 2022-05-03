@@ -29,10 +29,10 @@ def on_button_click(value: str, text: Any = None) -> None:
     :param value: Button value
     :param text: Button text
     """
-    if not text:
-        print(f'Hello from {value}')
-    else:
-        print(f'Hello from {text} with {value}')
+    # if not text:
+    #     print(f'Hello from {value}')
+    # else:
+    #     print(f'Hello from {text} with {value}')
 
 
 def paint_background(surface: 'pygame.Surface') -> None:
