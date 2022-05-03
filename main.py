@@ -17,11 +17,13 @@ import time
 import pygame
 import matplotlib.pyplot as plt
 import warnings
-import menu                        # meny.py should be in the folder
+# import menu
+import random                       # meny.py should be in the folder
 np.random.seed(int(time.time()))
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Parameters
+number_of_colors = 8
 GAME_TITLE = 'The Aquarium'
 SPEED_FISH = 5             # speed of fish
 N_FISH_START = 10        # starting number of fish
@@ -37,47 +39,53 @@ SCREEN_HEIGHT = 500
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
-GREY = (169,169,169)
+GREY = (169, 169, 169)
 GREEN = (0, 100, 0)
 
 
 # Define the objects needed for the simulation
 class Block(pygame.sprite.Sprite):
 
-    def __init__(self, width, height, color = BLACK):
+    def __init__(self, width, height, color=BLACK):
         pygame.sprite.Sprite.__init__(self)
         self.color = color
         self.image = pygame.Surface([width, height])
         self.image.fill(color)
         self.rect = self.image.get_rect()
+
     def changeSize(self, width, height):
         self.image = pygame.Surface([width, height])
         self.image.fill(self.color)
 
+
 class Bar(Block):
 
-    def __init__(self,x, y, lifetime, width=0, height=6,):
+    def __init__(self, x, y, lifetime, width=0, height=6,):
         self.width = width
         self.height = height
         self.lifetime = lifetime
         Block.__init__(self, self.width, self.height, RED)
         self.rect.x = x
         self.rect.y = y
+
     def update(self):
         self.width += (MAX_SIZE / self.lifetime)
         self.changeSize(self.width, self.height)
 
+
 class MaxBar(Block):
 
-    def __init__(self,x, y, width=6, height=6,):
+    def __init__(self, x, y, width=6, height=6,):
         self.width = width
         self.height = height
         Block.__init__(self, self.width, self.height, GREY)
         self.rect.x = x
         self.rect.y = y
+
     def update(self, currentSize):
         self.width = currentSize
         self.changeSize(self.width, self.height)
+
 
 class Fish(Block):
 
@@ -90,7 +98,7 @@ class Fish(Block):
         self.rect.y = np.random.randint(0, SCREEN_HEIGHT)
         self.bar = Bar(self.rect.x, self.rect.y - 12, self.lifetime)
         self.maxBar = MaxBar(self.rect.x, self.rect.y - 12)
-        self.angle = np.arctan2(np.random.randint(-10, 11), 
+        self.angle = np.arctan2(np.random.randint(-10, 11),
                                 np.random.randint(-10, 11))
         self.age = 0
         self.speed = SPEED_FISH
@@ -100,10 +108,10 @@ class Fish(Block):
     def procreate(self, same_species_list, bar_list, maxBar_list):
         lay_age = self.lifetime / 2
         lay_prob = 1./lay_age
-        if (self.age > lay_age and 
-           lay_prob > np.random.uniform() and 
-            len(same_species_list) < MAX_FISH):
-            elem = Fish(np.random.randint(50,250))
+        if (self.age > lay_age and
+           lay_prob > np.random.uniform() and
+                len(same_species_list) < MAX_FISH):
+            elem = Fish(np.random.randint(50, 250))
             elem.rect.x = self.rect.x
             elem.rect.y = self.rect.y
             elem.bar.rect.x = self.rect.x
@@ -144,28 +152,54 @@ class Fish(Block):
             self.bar.kill()
             self.maxBar.kill()
 
+
+class TextDraw:
+
+    def __init__(self, text, font, color=BLACK, x=0, y=0):
+
+        self.text = text
+        self.font = font
+        self.color = color
+        self.x = x
+        self.y = y
+        print(self.text, self.x, self.y)
+
+    def update(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
+    def draw(self, screen):
+        self.rect = self.font.render(self.text, True, self.color)
+        screen.blit(self.rect, (self.x, self.y))
+
+
 # Initialize PyGame
 pygame.init()
 pygame.display.set_caption(GAME_TITLE)
 screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
-# Launches an introductory menu 
-menu.launch(screen)
+# Launches an introductory menu
+# menu.launch(screen)
 
 fish_list = pygame.sprite.Group()
 bar_list = pygame.sprite.Group()
 maxBar_list = pygame.sprite.Group()
 
 for i in range(N_FISH_START):
-    fish = Fish(np.random.randint(50,250))
+    fish = Fish(np.random.randint(50, 250))
     fish_list.add(fish)
     bar_list.add(fish.bar)
     maxBar_list.add(fish.maxBar)
-    
+
 
 stage = 1
 dt = []
 n_fish = []
+number_of_colors = 100
+
+colors = ["#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+          for i in range(number_of_colors)]
+
 
 running = True
 clock = pygame.time.Clock()
@@ -173,33 +207,31 @@ while running:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
-            event.type == pygame.KEYDOWN and event.key == pygame.K_q):
+                event.type == pygame.KEYDOWN and event.key == pygame.K_q):
             running = False
-            
+
     stage += 1
     dt.append(stage)
     n_fish.append(len(fish_list))
 
     screen.fill(WHITE)
+
     for fish in fish_list:
         fish.update(fish_list, bar_list, maxBar_list)
 
     font = pygame.font.Font(None, 24)
-    text = ('Fish : ' + str(len(fish_list)) + '  ')
-    text_render = font.render(text, 1, GREEN)
-    textpos = text_render.get_rect()
-    textpos.right = SCREEN_WIDTH
-    textpos.top = 0
-    screen.blit(text_render, textpos)
+    TextDraw('Fish : ' + str(len(fish_list)) + '  ',
+             font, "black", SCREEN_WIDTH-70, 10).draw(screen)
+    for i in range(100):
+        TextDraw("hello", font, colors[i], 10, i*20).draw(screen)
 
     fish_list.draw(screen)
     maxBar_list.draw(screen)
     bar_list.draw(screen)
-    
+
     pygame.display.flip()
     clock.tick(TPS)
 
-del font, text_render
+del font,
 pygame.display.quit()
 pygame.quit()
-
