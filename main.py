@@ -386,7 +386,9 @@ if __name__ == "__main__":
                     event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 running = False
             if event.type == pygame.KEYDOWN:
-                openMenu()
+                c.disconnect()
+                pygame.display.quit()
+                pygame.quit()
             # if event.type == pygame.KEYUP:
             #     openGame()
 
@@ -398,8 +400,25 @@ if __name__ == "__main__":
             fish.update(fish_list, bar_list, maxBar_list)
 
         font = pygame.font.Font(None, 24)
-        TextDraw('Fish : ' + str(len(fish_list)) + '  ',
-                 font, "black", SCREEN_WIDTH-70, 10).draw(screen)
+        # TextDraw('Fish : ' + str(len(fish_list)) + '  ', font,
+        #              "black", SCREEN_WIDTH-70, 10*i).draw(screen)
+
+        # idx = 1
+        # print(pond_name, '\t', len(pond.fishes))
+        if "PLA" in c.other_ponds:
+            TextDraw('Fish : ' + "PLA" + str(len(c.other_ponds["PLA"].fishes)) + '  ',
+                     font, "black", SCREEN_WIDTH-350, 10).draw(screen)
+        if "SICK-SALMON" in c.other_ponds:
+            TextDraw('Fish : ' + "SICK-SALMON" + str(len(c.other_ponds["SICK-SALMON"].fishes)) + '  ',
+                     font, "black", SCREEN_WIDTH-350, 30).draw(screen)
+        if "PEEM" in c.other_ponds:
+            TextDraw('Fish : ' + "PEEM" + str(len(c.other_ponds["PEEM"].fishes)) + '  ',
+                     font, "black", SCREEN_WIDTH-350, 50).draw(screen)
+        if "GSL" in c.other_ponds:
+            TextDraw('Fish : ' + "GSL" + str(len(c.other_ponds["GSL"].fishes)) + '  ',
+                     font, "black", SCREEN_WIDTH-350, 70).draw(screen)
+
+        # idx += 1
 
         fish_list.draw(screen)
         maxBar_list.draw(screen)
@@ -409,5 +428,6 @@ if __name__ == "__main__":
         clock.tick(TPS)
 
     # del font,
+
     pygame.display.quit()
     pygame.quit()
