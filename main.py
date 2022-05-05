@@ -28,7 +28,7 @@ number_of_colors = 8
 GAME_TITLE = 'The Aquarium'
 SPEED_FISH = 5            # speed of fish    # starting number of fish
 MAX_FISH = 100            # max number of fishs
-TPS = 60
+TPS = 30
 MAX_SIZE = 48
 MAX_DURATION = 1*60*TPS    # number of seconds
 
@@ -47,7 +47,11 @@ pla.append(pygame.image.load("./asset/pla1.png"))
 pla.append(pygame.image.load("./asset/pla2.png"))
 pla.append(pygame.image.load("./asset/pla3.png"))
 pla.append(pygame.image.load("./asset/pla4.png"))
-sicksalmon = pygame.image.load("./asset/SickSalmon.png")
+sicksalmon = []
+sicksalmon.append(pygame.image.load("./asset/ss1.png"))
+sicksalmon.append(pygame.image.load("./asset/ss2.png"))
+sicksalmon.append(pygame.image.load("./asset/ss3.png"))
+sicksalmon.append(pygame.image.load("./asset/ss4.png"))
 peem = pygame.image.load("./asset/Peem.png")
 
 
@@ -162,13 +166,19 @@ class Fish(Block):
         if self.rect.bottom > SCREEN_HEIGHT or self.rect.y < 0:
             self.angle = -self.angle
 
+    def flip(self):
+        for i in range(len(self.imgs)):
+            self.imgs[i] = pygame.transform.flip(self.imgs[i], True, False)
+
     def move(self):
         face = int(self.speed * np.cos(self.angle))
         if(face < 0 and self.face_right):
-            self.image = pygame.transform.flip(self.image, True, False)
+            print("turn left!")
+            self.flip()
             self.face_right = False
         elif(face >= 0 and not self.face_right):
-            self.image = pygame.transform.flip(self.image, True, False)
+            print("turn right!")
+            self.flip()
             self.face_right = True
         # elif(face >= 0 and not self.face_right):
         #     self.image = pygame.transform.flip(self.image, True, False)
@@ -180,17 +190,17 @@ class Fish(Block):
         self.maxBar.rect.y += int(self.speed * np.sin(self.angle))
 
     def update(self, same_species_list, bar_list, maxBar_list):
+        self.move()
         self.frame += 1
         if(self.frame >= len(self.imgs)):
             self.frame = 0
         self.image = self.imgs[self.frame]
         self.current_img = self.image
-        self.move()
         self.stay_on_screen()
         self.age += 1
         self.fishData.pheromone += 1
         self.bar.update()
-        self.procreate(same_species_list, bar_list, maxBar_list)
+        # self.procreate(same_species_list, bar_list, maxBar_list)
         if(self.age <= (self.lifetime / 2) and self.width < MAX_SIZE):
             self.width += self.growth_rate
             self.height += self.growth_rate
@@ -201,7 +211,7 @@ class Fish(Block):
         if len(c.pond.fishes) >= self.fishData.crowdThreshold:
             self.fishData.status = 'dead'
         if self.age == self.lifetime//2 and random.randint(0, 100) > 80:
-            group_names = ['peem', 'sick-salmon']
+            group_names = ['peem', 'sick-salmon', "dang"]
             rand = random.randint(0, len(group_names)-1)
             migrate_handler = threading.Thread(
                 target=c.migrate_fish, args=[self.fishData, group_names[rand]])
@@ -244,7 +254,7 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
     # Launches an introductory menu
-    # menu.launch(screen)
+    # menu.launch(screen)    
 
     fish_list = pygame.sprite.Group()
     bar_list = pygame.sprite.Group()
@@ -257,7 +267,7 @@ if __name__ == "__main__":
     f1 = FishData("pla", "123456")
     f2 = FishData("pla", "123456")
     MY_POND.addFish(f1)
-    MY_POND.addFish(f2)
+    # MY_POND.addFish(f2)
     c = Client(MY_POND)
     msg_handler = threading.Thread(target=c.get_msg)
     msg_handler.start()
@@ -425,17 +435,17 @@ if __name__ == "__main__":
 
         # idx = 1
         # print(pond_name, '\t', len(pond.fishes))
-        if "PLA" in c.other_ponds:
+        if "pla" in c.other_ponds:
             TextDraw('Fish in : ' + "PLA " + str(len(c.other_ponds["pla"].fishes)) + '  ',
                      font, "black", SCREEN_WIDTH-350, 10).draw(screen)
-        if "SICK-SALMON" in c.other_ponds:
+        if "sick-salmon" in c.other_ponds:
             TextDraw('Fish in : ' + "SICK-SALMON " + str(len(c.other_ponds["sick-salmon"].fishes)) + '  ',
                      font, "black", SCREEN_WIDTH-350, 30).draw(screen)
-        if "PEEM" in c.other_ponds:
+        if "peem" in c.other_ponds:
             TextDraw('Fish in : ' + "PEEM " + str(len(c.other_ponds["peem"].fishes)) + '  ',
                      font, "black", SCREEN_WIDTH-350, 50).draw(screen)
-        if "GSL" in c.other_ponds:
-            TextDraw('Fish in : ' + "DANG" + str(len(c.other_ponds["dang"].fishes)) + '  ',
+        if "dang" in c.other_ponds:
+            TextDraw('Fish in : ' + "DANG " + str(len(c.other_ponds["dang"].fishes)) + '  ',
                      font, "black", SCREEN_WIDTH-350, 70).draw(screen)
 
         # idx += 1
