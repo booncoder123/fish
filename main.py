@@ -52,8 +52,11 @@ sicksalmon.append(pygame.image.load("./asset/ss1.png"))
 sicksalmon.append(pygame.image.load("./asset/ss2.png"))
 sicksalmon.append(pygame.image.load("./asset/ss3.png"))
 sicksalmon.append(pygame.image.load("./asset/ss4.png"))
-peem = pygame.image.load("./asset/Peem.png")
+peem = []
+peem.append(pygame.image.load("./asset/dang.png"))
 
+dang = []
+dang.append(pygame.image.load("./asset/dang.png"))
 
 # Define the objects needed for the simulation
 class Block(pygame.sprite.Sprite):
