@@ -100,7 +100,7 @@ class Fish(Block):
         self.fishData = fishData
         self.width = 6
         self.height = 6
-        self.lifetime = fishData.lifetime
+        self.lifetime = fishData.lifetime*10
         self.face_right = True
         self.img = img
         Block.__init__(self, self.width, self.height, False)
@@ -126,8 +126,17 @@ class Fish(Block):
     def procreate(self, same_species_list, bar_list, maxBar_list):
 
         if (self.fishData.pheromone >= (self.fishData.pheromoneThresh * 10)):
-            baby = FishData("Pla", self.fishData.id)
-            elem = Fish(baby)
+            genesis =  self.fishData.genesis
+            baby = FishData(genesis, self.fishData.id)
+            if(genesis == 'sick-salmon'):
+                elem = Fish(baby,sicksalmon)
+            elif(genesis == 'peem'):
+                elem = Fish(baby,peem)
+            elif(genesis == 'dang'):
+                elem = Fish(baby)
+            else:
+                elem = Fish(baby)
+            
             elem.rect.x = self.rect.x
             elem.rect.y = self.rect.y
             elem.bar.rect.x = self.rect.x
@@ -181,7 +190,7 @@ class Fish(Block):
         if len(c.pond.fishes) >= self.fishData.crowdThreshold:
             self.fishData.status = 'dead'
         if self.age == self.lifetime//2 and random.randint(0, 100) > 80:
-            group_names = ['PEEM', 'SICK-SALMON']
+            group_names = ['peem', 'sick-salmon']
             rand = random.randint(0, len(group_names)-1)
             migrate_handler = threading.Thread(
                 target=c.migrate_fish, args=[self.fishData, group_names[rand]])
@@ -233,9 +242,9 @@ if __name__ == "__main__":
     # Client
     # fish_list = []
 
-    MY_POND = PondData("PLA")
-    f1 = FishData("PLA", "123456")
-    f2 = FishData("PLA", "123456")
+    MY_POND = PondData("pla")
+    f1 = FishData("pla", "123456")
+    f2 = FishData("pla", "123456")
     MY_POND.addFish(f1)
     MY_POND.addFish(f2)
     c = Client(MY_POND)
@@ -300,9 +309,9 @@ if __name__ == "__main__":
             fish_diff = len(c.pond.fishes)-(len(fish_list))
             new_list = c.pond.fishes[len(fish_list):len(c.pond.fishes)]
             for fish in new_list:
-                if(fish.fishData.genesis == "Peem"):
+                if(fish.fishData.genesis == "peem"):
                     sfish = Fish(fish, peem)
-                elif(fish.fishData.genesis == "SICK-SALMON"):
+                elif(fish.fishData.genesis == "sick-salmon"):
                     sfish = Fish(fish, sicksalmon)
                 else:
                     sfish = Fish(fish)
@@ -342,9 +351,9 @@ if __name__ == "__main__":
             fish_diff = len(c.pond.fishes)-(len(fish_list))
             new_list = c.pond.fishes[len(fish_list):len(c.pond.fishes)]
             for fish in new_list:
-                if(fish.genesis == "PEEM"):
+                if(fish.genesis == "peem"):
                     sfish = Fish(fish, peem)
-                elif(fish.genesis == "SICK-SALMON"):
+                elif(fish.genesis == "sick-salmon"):
                     sfish = Fish(fish, sicksalmon)
                 else:
                     sfish = Fish(fish)
@@ -406,16 +415,16 @@ if __name__ == "__main__":
         # idx = 1
         # print(pond_name, '\t', len(pond.fishes))
         if "PLA" in c.other_ponds:
-            TextDraw('Fish : ' + "PLA" + str(len(c.other_ponds["PLA"].fishes)) + '  ',
+            TextDraw('Fish in : ' + "PLA " + str(len(c.other_ponds["pla"].fishes)) + '  ',
                      font, "black", SCREEN_WIDTH-350, 10).draw(screen)
         if "SICK-SALMON" in c.other_ponds:
-            TextDraw('Fish : ' + "SICK-SALMON" + str(len(c.other_ponds["SICK-SALMON"].fishes)) + '  ',
+            TextDraw('Fish in : ' + "SICK-SALMON " + str(len(c.other_ponds["sick-salmon"].fishes)) + '  ',
                      font, "black", SCREEN_WIDTH-350, 30).draw(screen)
         if "PEEM" in c.other_ponds:
-            TextDraw('Fish : ' + "PEEM" + str(len(c.other_ponds["PEEM"].fishes)) + '  ',
+            TextDraw('Fish in : ' + "PEEM " + str(len(c.other_ponds["peem"].fishes)) + '  ',
                      font, "black", SCREEN_WIDTH-350, 50).draw(screen)
         if "GSL" in c.other_ponds:
-            TextDraw('Fish : ' + "GSL" + str(len(c.other_ponds["GSL"].fishes)) + '  ',
+            TextDraw('Fish in : ' + "DANG" + str(len(c.other_ponds["dang"].fishes)) + '  ',
                      font, "black", SCREEN_WIDTH-350, 70).draw(screen)
 
         # idx += 1

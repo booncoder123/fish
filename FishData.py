@@ -28,7 +28,7 @@ class FishData:
         self.crowdThreshold = randCrowdThresh()
         self.pheromone = 0
         self.pheromoneThresh = randPheromoneThresh()
-        self.lifetime = 600
+        self.lifetime = 60
         self.parentId = parentId
 
     def getId(self):
