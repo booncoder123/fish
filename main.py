@@ -42,7 +42,11 @@ RED = (255, 0, 0)
 GREY = (169, 169, 169)
 GREEN = (0, 100, 0)
 
-pla = pygame.image.load("./asset/fish.png")
+pla = []
+pla.append(pygame.image.load("./asset/pla1.png"))
+pla.append(pygame.image.load("./asset/pla2.png"))
+pla.append(pygame.image.load("./asset/pla3.png"))
+pla.append(pygame.image.load("./asset/pla4.png"))
 sicksalmon = pygame.image.load("./asset/SickSalmon.png")
 peem = pygame.image.load("./asset/Peem.png")
 
@@ -96,15 +100,17 @@ class MaxBar(Block):
 
 class Fish(Block):
 
-    def __init__(self, fishData, img=pla):
+    def __init__(self, fishData, imgs=pla):
         self.fishData = fishData
         self.width = 6
         self.height = 6
         self.lifetime = fishData.lifetime*10
         self.face_right = True
-        self.img = img
+        self.imgs = imgs
+        self.current_img = self.imgs[0]
+        self.frame = 0
         Block.__init__(self, self.width, self.height, False)
-        self.image = self.img
+        self.image = self.current_img
         self.image = pygame.transform.scale(
             self.image, (self.width, self.height))
         self.rect.x = np.random.randint(0, SCREEN_WIDTH)
@@ -118,7 +124,7 @@ class Fish(Block):
         self.growth_rate = MAX_SIZE / (self.lifetime / 2)
 
     def changeSize(self, width, height):
-        self.image = self.img
+        self.image = self.current_img
         self.image = pygame.transform.scale(self.image, (width, height))
         if not self.face_right:
             self.image = pygame.transform.flip(self.image, True, False)
@@ -174,6 +180,11 @@ class Fish(Block):
         self.maxBar.rect.y += int(self.speed * np.sin(self.angle))
 
     def update(self, same_species_list, bar_list, maxBar_list):
+        self.frame += 1
+        if(self.frame >= len(self.imgs)):
+            self.frame = 0
+        self.image = self.imgs[self.frame]
+        self.current_img = self.image
         self.move()
         self.stay_on_screen()
         self.age += 1

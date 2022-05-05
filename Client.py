@@ -14,7 +14,7 @@ import pickle
 
 # IP = '0.tcp.ap.ngrok.io'
 IP = "0.tcp.ap.ngrok.io"
-PORT = 17665
+PORT = 18448
 ADDR = (IP, PORT)
 MSG_SIZE = 4096
 FORMAT = "utf-8"
