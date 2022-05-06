@@ -53,7 +53,10 @@ sicksalmon.append(pygame.image.load("./asset/ss2.png"))
 sicksalmon.append(pygame.image.load("./asset/ss3.png"))
 sicksalmon.append(pygame.image.load("./asset/ss4.png"))
 peem = []
-peem.append(pygame.image.load("./asset/dang.png"))
+peem.append(pygame.image.load("./asset/p1.png"))
+peem.append(pygame.image.load("./asset/p2.png"))
+peem.append(pygame.image.load("./asset/p3.png"))
+peem.append(pygame.image.load("./asset/p4.png"))
 
 dang = []
 dang.append(pygame.image.load("./asset/dang.png"))
